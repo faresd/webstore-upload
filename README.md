@@ -1,97 +1,115 @@
-# grunt-webstore-upload
+# webstore-upload
 
-> Automate uploading process of the new versions of Chrome Extension or App to Chrome Webstore
+> Automatically upload new versions of Chrome Extensions or Apps to the Chrome Webstore - integrated in your node project!
+
+> Forked from [c301's grunt-webstore-upload](https://github.com/c301/grunt-webstore-upload) to make it usable as a node module instead of a grunt task.
 
 ## Getting Started
-This plugin requires Grunt.
-
-If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
-
-```shell
-npm install grunt-webstore-upload --save-dev
-```
-
-Once the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
-
-```js
-grunt.loadNpmTasks('grunt-webstore-upload');
-```
-
-## The "webstore_upload" task
 
 ### Overview
 Read more about great ability to automate this task here: [Chrome Web Store Publish API](http://developer.chrome.com/webstore/using_webstore_api).
-In your project's Gruntfile, add a section named `webstore_upload` to the data object passed into `grunt.initConfig()`.
-#### Please note, that you have to upload your extension first time manually, and then provide appID to update ( see below ). Also please make sure, that your draft ready to be published, ie all required fields was populated
 
+**Please note, that you have to upload your extension first time manually, and then provide appID to update ( see below ). Also please make sure, that your draft ready to be published, ie all required fields was populated**
+
+### Install
+[With npm](https://www.npmjs.com/package/webstore-upload):
+`npm install --save webstore-upload`
+
+### Example
 ```js
-grunt.initConfig({
-    webstore_upload: {
-        "accounts": {
-            "default": { //account under this section will be used by default
-                publish: true, //publish item right after uploading. default false
-                client_id: "ie204es2mninvnb.apps.googleusercontent.com",
-                client_secret: "LEJDeBHfS"
-            },
-            "other_account": {
-                publish: true, //publish item right after uploading. default false
-                client_id: "ie204es2mninvnb.apps.googleusercontent.com",
-                client_secret: "LEJDeBHfS",
-                refresh_token: "1/eeeeeeeeeeeeeeeeeeeeeee_aaaaaaaaaaaaaaaaaaa"
-            },
-            "new_account": { 
-                cli_auth: true, // Use server-less cli prompt go get access token. Default false
-                publish: true, //publish item right after uploading. default false
-                client_id: "kie204es2mninvnb.apps.googleusercontent.com",
-                client_secret: "EbDeHfShcj"
-            }
-        },
-        "extensions": {
-            "extension1": {
-                //required
-                appID: "jcbeonnlikcefedeaijjln",
-                //required, we can use dir name and upload most recent zip file
-                zip: "test/files/test1.zip"      
-            },
-            "extension2": {
-                account: "new_account",
-                //will rewrite values from 'account' section
-                publish: false, 
-                appID: "jcbeonnlplijjln",
-                zip: "test/files/test2.zip"
-            }
-        }
-    }
+
+// Promise api
+var webstore_upload = require('webstore_upload');
+
+webstore_upload(uploadOptions, loggerFn)
+.then(function(result) {
+    console.log(result);
+    // do somethings nice
+    return 'yay';
 })
+.catch(function(err) {
+    console.error(err);
+});
+
+
+// Deprecated callback api - meanwhile it's here for compatability and whoever is already depend on it.
+var webstore_upload = require('webstore_upload/deprecated');
+
+webstore_upload(uploadOptions, function(result) {
+    console.log('complete!');
+    console.log(result);
+});
 ```
 
-### CLI options
-You can pass multiple compile targets separated with comas: `grunt webstore_upload:target1:target2 -m "new super feature released"`
+```js
+var uploadOptions = {
+    accounts: {
+        default: { //account under this section will be used by default
+            publish: true, //publish item right after uploading. default false
+            client_id: 'ie204es2mninvnb.apps.googleusercontent.com',
+            client_secret: 'LEJDeBHfS'
+        },
+        other_account: {
+            publish: true, //publish item right after uploading. default false
+            client_id: 'ie204es2mninvnb.apps.googleusercontent.com',
+            client_secret: 'LEJDeBHfS',
+            refresh_token: '1/eeeeeeeeeeeeeeeeeeeeeee_aaaaaaaaaaaaaaaaaaa'
+        },
+        new_account: {
+            cli_auth: true, // Use server-less cli prompt go get access token. Default false
+            publish: true, //publish item right after uploading. default false
+            client_id: 'kie204es2mninvnb.apps.googleusercontent.com',
+            client_secret: 'EbDeHfShcj'
+        }
+    },
+    extensions: {
+        extension1: {
+            //required
+            appID: 'jcbeonnlikcefedeaijjln',
+            //required, we can use dir name and upload most recent zip file
+            zip: 'test/files/test1.zip'
+        },
+        extension2: {
+            account: 'new_account',
+            //will rewrite values from 'account' section
+            publish: true,
+            appID: 'jcbeonnlikcefedeaijjln',
+            zip: 'test/files/test2.zip',
+            publishTarget: 'trustedTesters'
+        }
+    },
+    uploadExtensions : ['extension2']
+};
+```
 
-#### -m
-Message for release, can be used within `onComplete` callback
+### Tests
+Test cases:
+* All should work with existing refresh_token
+* All should work with creating new token from web
+* All should work with creating new token from cmd
+* Fail on bad existing refresh_token
+* Fail on Non developer account
+* Fail on incorrect publishTarget value
+
+### Logger
+Can be `default`, `quiet` or your `logger function` (`winston` and similar):
+// info, log, warn, err
+logger('log', 'message');
+
+### CLI
+If you want the cli option, you can use the [original grunt project](https://github.com/c301/grunt-webstore-upload)
 
 ### Configuration
 
-#### accounts
-List of the accounts (see *Accounts* section for details).
+|   Name    |   Type    |   Required    |   Default |  Description  |   Notes   |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+|   **accounts**    |   `Object`    |   `Yes`   |       |   *List of the accounts (see `Accounts` section for details).*    |       |
+|   **extensions**  |   `Object`    |   `Yes`   |       |   *List of the extension (see `Extensions` section for details).* |       |
+|   **onComplete**  |   `Function`  |   `No`    |       |   *Function that will be executed when all extensions uploaded.*  |   See result example below    |
 
-Type: `Object`
-
-Required
-
-#### extensions
-List of the extension (see *Extensions* section for details).
-
-Type: `Object`
-
-Required
-
-#### onComplete
-Function that will be executed when all extension uploaded.
-
-Array of released extensions and release message ( see `-m` ) passed as argument:
-```
+#### onComplete / Promise result
+Array of released extensions passed as argument:
+```js
 [{
     fileName        : zip,
     extensionName   : options.name,
@@ -100,108 +118,36 @@ Array of released extensions and release message ( see `-m` ) passed as argument
 }..]
 ```
 
-Type: `Function`
-
-Optional
-
-### Accounts
+#### Accounts
 Since Google allows only 20 extensions under one account, you can create multiple records here.
 It is object with arbitrary meaningful accounts names as a keys (see example above).
 Special account named `default` will be used by defaults.
 
-#### publish
-Make item available at Chrome Webstore or not
+|   Name    |   Type    |   Required    |   Default |  Description  |   Notes   |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+|   **publish** |   `Boolean`   |   `No`    |   `false` |   *Make item available at Chrome Webstore or not.*    |       |
+|   **client_id**   |   `String`    |   `Yes`   |       |   *Client ID to access to Chrome Console API.*    |   [How to get it](http://developer.chrome.com/webstore/using_webstore_api#beforeyoubegin) |
+|   **client_secret**   |   `String`    |   `Yes`   |       |   *Client Secret to access to Chrome Console API.*    |   [How to get it](http://developer.chrome.com/webstore/using_webstore_api#beforeyoubegin) |
+|   **refresh_token**   |   `String`    |   `No`    |       |   *Refresh token for the Chrome Console API.* |   [How to get it](http://developer.chrome.com/webstore/using_webstore_api#beforeyoubegin) |
 
-Type: `Boolean`
-
-Default value: `false`
-
-Optional
-
-#### client_id
-[How to get it](http://developer.chrome.com/webstore/using_webstore_api#beforeyoubegin)
-Client ID to access to Chrome Console API
-
-Type: `String`
-
-Required
-
-#### client_secret
-[How to get it](http://developer.chrome.com/webstore/using_webstore_api#beforeyoubegin)
-Client Secret to access to Chrome Console API
-
-Type: `String`
-
-Required
-
-#### refresh_token
-[How to get it](http://developer.chrome.com/webstore/using_webstore_api#beforeyoubegin)
-Refresh token for the Chrome Console API
-
-Type: `String`
-
-Optional
-
-
-### Extensions
+#### Extensions
 It is object with arbitrary meaningful extensions names as a keys (see example above).
 
-#### appID
-Extension id or Application id at Chrome Webstore
+|   Name    |   Type    |   Required    |   Default |  Description  |   Notes   |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+|   **appID**   |   `String`    |   `Yes`   |       |   *Extension id or Application id at Chrome Webstore* |       |
+|   **zip** |   `String`    |   `Yes`   |       |   *Path to zip file. Upload most recent zip file in case of path is directory*    |       |
+|   **zip** |   `String`    |   `Yes`   |       |       |       |
+|   **publish** |   `Boolean`   |   `No`    |   `false` |   *Make item available at Chrome Webstore or not. This option under `extensions` will rewrite `publish` under related `account` section.* |       |
+|   **publishTarget**   |   `String`    |   `No`    |   `default`   |   *Make item available at Chrome Webstore. Can be `trustedTesters` or `default`*  |   [Publish](https://developer.chrome.com/webstore/webstore_api/items/publish) |
+|   **account** |   `String`    |   `No`    |   `default`   |   *Name of the account, that we should use to upload extension.*  |       |
 
-Type: `String`
 
-Required
-
-#### zip
-Path to zip file. Upload most recent zip file in case of path is directory
-
-Type: `String`
-
-Required
-
-#### publish
-Make item available at Chrome Webstore or not. 
-This option under `extensions` will rewrite `publish` under related `account` section.
-
-Type: `Boolean`
-
-Default value: `false`
-
-Optional
-
-#### publishTarget
-Make item available at . 
-See https://developer.chrome.com/webstore/webstore_api/items/publish
-Can be `trustedTesters` or `default`
-
-Type: `String`
-
-Default value: `default`
-
-Optional
-
-#### account
-Name of the account, that we should use to upload extension. If ommited, `default` account will be used.
-
-Type: `String`
-
-Default value: `default`
-
-Optional
-
-### Migrating from < 0.7 versions
-In order to move your existing config to new version, do following steps:
-- Create new keys in config `accounts`, `extensions`  
-- Remove `browser_path` from `options`
-- Move `publish`, `client_id`, `client_secret` from `options` to `default` account
-- Move all exntentions to `extension` section.
-- Move `publish`, `zip`, `appID` from `options` of the extension to one level up
-- Ask me, if something still broken :P
 
 ### Workflow
 Read more about [Chrome Web Store Publish API](http://developer.chrome.com/webstore/using_webstore_api) and how to get Client ID and Client secret
-+ execute `grunt webstore_upload` or `grunt webstore_upload:target` in order to upload zip files
++ require the module with the configuration (see examples)
++ call the module
 + browser should be opened
 + confirm privileges in browser ( we have to manually do this )
 + wait until uploading will be finished
@@ -211,16 +157,10 @@ it will automatically refresh the token for you without any manual intervention.
 
 
 ## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
-
-## Release History
-0.8.9 `-m` and `onComplete` released
-
-0.7.0 Allowed multiple accounts. Async multiple uploading. Redo configuration style.
-
-0.5.1 Fix problem with path
-
-0.5.0 Initial commit
+* [Bugs, features and etc.](https://github.com/arieljannai/webstore-upload/issues) are welcome!
+* In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality.
 
 ## License
-Copyright (c) 2014 Anton Sivolapov. Licensed under the MIT license.
+**Mine:** Copyright (c) 2016 Ariel Jannai. Licensed under the MIT license.
+
+**Original project:** Copyright (c) 2014 Anton Sivolapov. Licensed under the MIT license.

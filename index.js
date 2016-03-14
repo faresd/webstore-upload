@@ -1,0 +1,1 @@
+module.exports = require('./lib/webstore_upload.js');
