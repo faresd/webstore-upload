@@ -92,9 +92,12 @@ Test cases:
 * Fail on incorrect publishTarget value
 
 ### Logger
-Can be `default`, `quiet` or your `logger function` (`winston` and similar):
+Can be `'default'`, `'quiet'` or your logger `function` (`winston` and similar):
+
+```js
 // info, log, warn, err
 logger('log', 'message');
+```
 
 ### CLI
 If you want the cli option, you can use the [original grunt project](https://github.com/c301/grunt-webstore-upload)
