@@ -284,8 +284,7 @@ module.exports = function webstore_upload(uploadOptions, onComplete) {
                 headers: {
                     'Authorization': 'Bearer ' + options.account.token,
                     'x-goog-api-version': '2',
-                    'Content-Length': '0',
-                    'publishTarget': options.publishTarget
+                    'Content-Length': '0'
                 }
             };
 
