@@ -272,19 +272,42 @@ module.exports = function webstore_upload(uploadOptions, onComplete) {
         console.log('Publishing ('+ options.name +') ' + options.appID + '..');
 
         var url = util.format('/chromewebstore/v1.1/items/%s/publish', options.appID);
-        if(options.publishTarget)
-            url += '?publishTarget=' + options.publishTarget;
 
-        var req = https.request({
-            method: 'POST',
-            host: 'www.googleapis.com',
-            path: url,
-            headers: {
-                'Authorization': 'Bearer ' + options.account.token,
-                'x-goog-api-version': '2',
-                'Content-Length': '0'
+        var requestBody = {};
+
+        // In case of 'unlisted' target, only passing 'publishTarget' as a request header works
+        if(options.publishTarget === 'unlisted') {
+            requestBody = {
+                method: 'POST',
+                host: 'www.googleapis.com',
+                path: url,
+                headers: {
+                    'Authorization': 'Bearer ' + options.account.token,
+                    'x-goog-api-version': '2',
+                    'Content-Length': '0',
+                    'publishTarget': options.publishTarget
+                }
+            };
+
+            if(options.publishTarget) requestBody.headers.publishTarget = options.publishTarget
+
+        } else {
+            if(options.publishTarget)
+                url += '?publishTarget=' + options.publishTarget;
+
+            requestBody = {
+                method: 'POST',
+                host: 'www.googleapis.com',
+                path: url,
+                headers: {
+                    'Authorization': 'Bearer ' + options.account.token,
+                    'x-goog-api-version': '2',
+                    'Content-Length': '0'
+                }
             }
-        }, function(res) {
+        }
+
+        var req = https.request(requestBody, function(res) {
             res.setEncoding('utf8');
             var response = '';
             res.on('data', function (chunk) {
